@@ -1,39 +1,72 @@
-import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
-import React, { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
 import { useEffect } from "react";
 import Scroller from "src/components/Scroller";
-import { Grid, Positioner, Root } from "./style";
+import { useWindowSize } from "usehooks-ts";
+import { Grid, Positioner, Root, ScrollerOuter, ScrollItem } from "./style";
 
-const grids = [
-  {
-    items: [
-      { cols: [2, 4], rows: [1, 4] },
-      { cols: [8, 16], rows: [4, 8] },
-      { cols: [2, 4], rows: [5, 9] },
-    ],
-  },
-  {
-    items: [
-      { cols: [2, 6], rows: [1, 4] },
-      { cols: [8, 17], rows: [5, 9] },
-      { cols: [1, 3], rows: [3, 6] },
-    ],
-  },
-  {
-    items: [
-      { cols: [2, 6], rows: [1, 3] },
-      { cols: [8, 17], rows: [4, 9] },
-      { cols: [2, 4], rows: [4, 8] },
-    ],
-  },
-  {
-    items: [
-      { cols: [2, 4], rows: [2, 5] },
-      { cols: [12, 17], rows: [4, 9] },
-      { cols: [1, 5], rows: [6, 9] },
-    ],
-  },
-];
+const grids = {
+  lg: [
+    {
+      items: [
+        { cols: [2, 4], rows: [1, 4] },
+        { cols: [8, 16], rows: [4, 8] },
+        { cols: [2, 4], rows: [5, 9] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 6], rows: [1, 4] },
+        { cols: [8, 17], rows: [5, 9] },
+        { cols: [1, 3], rows: [3, 6] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 6], rows: [1, 3] },
+        { cols: [8, 17], rows: [4, 9] },
+        { cols: [2, 4], rows: [4, 8] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 4], rows: [2, 5] },
+        { cols: [12, 17], rows: [4, 9] },
+        { cols: [1, 5], rows: [6, 9] },
+      ],
+    },
+  ],
+  sm: [
+    {
+      items: [
+        { cols: [2, 4], rows: [1, 4] },
+        { cols: [3, 5], rows: [4, 7] },
+        { cols: [2, 4], rows: [5, 6] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 6], rows: [1, 4] },
+        { cols: [4, 6], rows: [5, 7] },
+        { cols: [1, 3], rows: [3, 6] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 6], rows: [1, 3] },
+        { cols: [4, 7], rows: [2, 4] },
+        { cols: [2, 4], rows: [4, 7] },
+      ],
+    },
+    {
+      items: [
+        { cols: [2, 4], rows: [2, 5] },
+        { cols: [3, 6], rows: [4, 7] },
+        { cols: [1, 5], rows: [5, 7] },
+      ],
+    },
+  ],
+};
 
 const Tile = ({
   prevIncrement,
@@ -97,7 +130,7 @@ const Tile = ({
         gridRowStart: itemLayout.rows[0],
         gridRowEnd: itemLayout.rows[1],
         transformOrigin: "0 0",
-        outline: "1px solid white",
+        outline: "1px solid rgba(255, 255, 255, 1)",
       }}
     >
       <motion.div
@@ -109,12 +142,23 @@ const Tile = ({
   );
 };
 
+const bp = (width: number): keyof typeof grids => {
+  if (width > 768) {
+    return "lg";
+  }
+  return "sm";
+};
+
 const App = () => {
   const refs = useRef<(HTMLElement | null)[]>([null, null]);
-  const { scrollYProgress } = useScroll();
+  const scrollerRef = useRef<HTMLDivElement>(document.createElement("div"));
+  const { scrollYProgress } = useScroll({ container: scrollerRef });
   const [activeIndex, setActiveIndex] = useState(0);
   const [nextRects, setNextRects] = useState<DOMRect[]>([]);
   const [currRects, setCurrRects] = useState<DOMRect[]>([]);
+
+  const { width } = useWindowSize();
+  const bpKey = bp(width);
 
   const getRects = (index: number) => {
     const childArr: HTMLElement[] = Array.prototype.slice.call(
@@ -133,9 +177,9 @@ const App = () => {
     let currIndex = activeIndex;
     let nextIndex = activeIndex + 1;
 
-    if (!grids[nextIndex]) {
+    if (!grids[bpKey][nextIndex]) {
       console.log("no next");
-      nextIndex = grids.length - 1;
+      nextIndex = grids[bpKey].length - 1;
     }
 
     const currRects = getRects(currIndex);
@@ -146,7 +190,7 @@ const App = () => {
   }, [activeIndex]);
 
   scrollYProgress.on("change", (e) => {
-    const increment = 1 / (grids.length - 1);
+    const increment = 1 / (grids[bpKey].length - 1);
     const implied = Math.floor(e / increment);
 
     if (activeIndex !== implied) {
@@ -160,50 +204,28 @@ const App = () => {
         <Positioner>
           {!!currRects.length &&
             currRects.map((c, i) => {
-              if (!grids[activeIndex]) {
+              if (!grids[bpKey][activeIndex]) {
                 console.log("no found");
               }
 
               return (
                 <Tile
                   key={i}
-                  itemLayout={grids[activeIndex].items[i]}
+                  itemLayout={grids[bpKey][activeIndex].items[i]}
                   index={i}
                   scrollYProgress={scrollYProgress}
                   currRect={c}
                   nextRect={nextRects[i]}
-                  prevIncrement={(1 / (grids.length - 1)) * activeIndex}
-                  nextIncrement={(1 / (grids.length - 1)) * (activeIndex + 1)}
+                  prevIncrement={(1 / (grids[bpKey].length - 1)) * activeIndex}
+                  nextIncrement={
+                    (1 / (grids[bpKey].length - 1)) * (activeIndex + 1)
+                  }
                 />
               );
             })}
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-          <span className="vert" />
-
-          <span className="hoz" />
-          <span className="hoz" />
-          <span className="hoz" />
-          <span className="hoz" />
-          <span className="hoz" />
-          <span className="hoz" />
-          <span className="hoz" />
         </Positioner>
 
-        {grids.map((grid, i) => {
+        {grids[bpKey].map((grid, i) => {
           const lastIndex = grid.items.length - 1;
 
           return (
@@ -225,11 +247,13 @@ const App = () => {
           );
         })}
       </Root>
-      <Scroller>
-        {grids.map((_, i) => (
-          <div key={i} />
+      <ScrollerOuter ref={scrollerRef}>
+        {/* <Scroller> */}
+        {grids[bpKey].map((_, i) => (
+          <ScrollItem key={i}>{i}</ScrollItem>
         ))}
-      </Scroller>
+        {/* </Scroller> */}
+      </ScrollerOuter>
     </>
   );
 };

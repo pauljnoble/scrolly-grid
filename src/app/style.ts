@@ -13,7 +13,7 @@ export const Root = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid white;
+  /* border: 1px solid white; */
 `;
 
 const absoluteFillStyles = css`
@@ -24,14 +24,16 @@ const absoluteFillStyles = css`
   bottom: 0;
 `;
 
-const cols = Array.from(Array(16).keys());
-const rows = Array.from(Array(9).keys());
+const colsSm = Array.from(Array(6).keys());
+const rowsSm = Array.from(Array(8).keys());
+
+const colsLg = Array.from(Array(16).keys());
+const rowsLg = Array.from(Array(9).keys());
 
 const commonGridStyles = css`
   ${absoluteFillStyles}
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+
   width: 100%;
   grid-column-gap: 20px;
 
@@ -51,7 +53,10 @@ const commonGridStyles = css`
     display: inline-block;
   }
 
-  ${cols.map((c, i) => {
+  grid-template-columns: repeat(${colsSm.length}, 1fr);
+  grid-template-rows: repeat(${rowsSm.length}, 1fr);
+
+  ${colsSm.map((c, i) => {
     return `
     > span.vert:nth-of-type(${i + 1}) {
       grid-column-start: ${i + 1};
@@ -59,13 +64,35 @@ const commonGridStyles = css`
     `;
   })}
 
-  ${rows.map((c, i) => {
+  ${rowsSm.map((c, i) => {
     return `
-    > span.hoz:nth-of-type(${i + 1 + cols.length - 1}) {
+    > span.hoz:nth-of-type(${i + 1 + colsSm.length - 1}) {
       grid-row-start: ${i + 1};
     }
     `;
   })}
+
+  /* Large */
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(${colsLg.length}, 1fr);
+    grid-template-rows: repeat(${rowsLg.length}, 1fr);
+
+    ${colsLg.map((c, i) => {
+      return `
+    > span.vert:nth-of-type(${i + 1}) {
+      grid-column-start: ${i + 1};
+    }
+    `;
+    })}
+
+    ${rowsLg.map((c, i) => {
+      return `
+    > span.hoz:nth-of-type(${i + 1 + colsLg.length - 1}) {
+      grid-row-start: ${i + 1};
+    }
+    `;
+    })}
+  }
 
   > div {
     overflow: hidden;
@@ -88,4 +115,30 @@ export const Positioner = styled(motion.div)`
 export const Grid = styled.div`
   ${commonGridStyles}
   pointer-events: none;
+`;
+
+export const ScrollerOuter = styled.div`
+  position: fixed;
+  height: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  /* background-color: blue; */
+  overflow: auto;
+  scroll-snap-type: y mandatory;
+`;
+
+export const ScrollItem = styled.div`
+  height: -webkit-fill-available;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  color: #eee;
+  pointer-events: none;
+  /* border: 1px solid white; */
+  opacity: 0;
 `;

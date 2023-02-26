@@ -6,6 +6,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: black;
+  overflow: hidden;
+  /* height: -webkit-fill-available; */
+  /* background-color: red; */
+  height: -webkit-fill-available;
+  position: fixed;
 }
 
 code {
@@ -14,7 +19,10 @@ code {
 }
 
 html {
-  scroll-snap-type: y mandatory;
+  height: -webkit-fill-available;
+  position: fixed;
+  /* scroll-snap-type: y mandatory; */
+  overflow: hidden;
 }
 
 * {
